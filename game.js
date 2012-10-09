@@ -1,50 +1,89 @@
-var game = (function () {
+var Game = (function () {
 	var canvas,
 		context;
 
-	function obj() {
+	function Obj () {
 		this.coords = [0, 0];
 		this.size = [50, 50];
 		this.color = [0, 0, 0];
+		this.mod = 0;
 	}
 
-	obj.prototype.render = function(ctx) {
-		ctx.fillStyle = "rgb("+ this.color.join(",") +")";
+	Obj.prototype.render = function (ctx) {
+		var color = this.color.slice();
+
+		if (this.mod >= 0) {
+			var mod = this.mod--;
+			color = this.color.map(function (c) { return c + mod; });
+		}
+		else
+			this.mod = 0;
+
+		ctx.fillStyle = "rgb("+ color.join(",") +")";
 		ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
 	};
 
-	function game(id) {
-		canvas = document.getElementById(id);
-		context = canvas.getContext('2d');
-		canvas.addEventListener('click', function(evt) {
-			//console.log(evt);
+	Obj.prototype.modify = function (time) {
+		this.mod = 100;
+	};
+
+	function Scene () {
+		this.objs = [];
+	}
+
+	Scene.prototype.add = function (obj) {
+		this.objs.push(obj);
+
+		return obj;
+	};
+
+	Scene.prototype.queryClick = function (coords) {
+		var hits = this.objs.filter(function (obj) {
+			return coords[0] >= obj.coords[0] && coords[0] <= (obj.coords[0] + obj.size[0]) &&
+				coords[1] >= obj.coords[1] && coords[1] <= (obj.coords[1] + obj.size[1])
 		});
 
-		this.objs = [];
+		return hits;
+	};
 
-		var o;
+	Scene.prototype.render = function (ctx) {
+		this.objs.forEach(function (obj) { obj.render(ctx); });
+	};
 
-		o = new obj();
-		o.coords = [50, 50];
-		this.objs.push(o);
+	function Game (id) {
+		var self = this;
 
-		o = new obj();
+		canvas = document.getElementById(id);
+		context = canvas.getContext('2d');
+		canvas.addEventListener('click', function (evt) { self.clickController(evt); });
+
+		this.scene = new Scene();
+		this.scene.add(new Obj()).coords = [50, 50];
+
+		var o = new Obj();
 		o.coords = [150, 150];
 		o.color = [50, 200, 0];
-		this.objs.push(o);
+		this.scene.add(o);
 
-		var self = this;
 		requestAnimationFrame(function () { self.step() }, canvas);
 	}
 
-	game.prototype.step = function () {
-		this.objs.forEach(function (obj) { obj.render(context); });
+	Game.prototype.step = function () {
+		this.scene.render(context);
+
+		var self = this;
+		requestAnimationFrame(function () { self.step() }, canvas);
 	};
 
-	return game;
+	Game.prototype.clickController = function (evt) {
+		var coords = [evt.clientX - evt.target.offsetLeft, evt.clientY - evt.target.offsetTop];
+		this.scene.queryClick(coords)[0].modify(1);
+	};
+
+	return Game;
 })();
 
-(function() {
+(function () {
 	var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 	window.requestAnimationFrame = requestAnimationFrame;
 })();
