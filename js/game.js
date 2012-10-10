@@ -30,8 +30,15 @@ var Game = (function () {
 		this.mod = 100;
 	};
 
-	function Button () {
+	function Button (options) {
+		Obj.call(this);
+
+		this.size = [100, 30];
+		this.title = options.title;
+		this.state = options.state;
 	}
+
+	Button.prototype = new Obj();
 
 	function Scene () {
 		this.objs = [];
@@ -93,6 +100,7 @@ var Game = (function () {
 		var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
 		var hits = this.scene.queryClick(coords);
 
+		//console.log(hits);
 		hits.forEach(function (hit) { hit.modify(1); });
 	};
 
@@ -100,9 +108,17 @@ var Game = (function () {
 		var scene = new Scene();
 
 		ejs.xhr('GET').callback((function (xhr, data) {
-			data.units.forEach(function (unit) {
-				scene.add(new Obj()).coords = unit.coords;
-			}, this);
+			if (data.menu) {
+				data.menu.options.forEach(function (option) {
+					scene.add(new Button(option));
+				}, this);
+			}
+
+			if (data.units) {
+				data.units.forEach(function (unit) {
+					scene.add(new Obj()).coords = unit.coords;
+				}, this);
+			}
 		}).bind(this)).send(stateFile);
 
 		return scene;
