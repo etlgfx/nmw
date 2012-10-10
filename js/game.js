@@ -26,7 +26,7 @@ var Game = (function () {
 		ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
 	};
 
-	Obj.prototype.modify = function (time) {
+	Obj.prototype.click = function (time) {
 		this.mod = 100;
 	};
 
@@ -39,6 +39,10 @@ var Game = (function () {
 	}
 
 	Button.prototype = new Obj();
+
+	Button.prototype.click = function (game, scene) {
+		game.pushState(game.loadState(this.state));
+	};
 
 	function Scene () {
 		this.objs = [];
@@ -59,8 +63,8 @@ var Game = (function () {
 		return hits;
 	};
 
-	Scene.prototype.render = function (ctx) {
-		this.objs.forEach(function (obj) { obj.render(ctx); });
+	Scene.prototype.render = function (ctx, timing) {
+		this.objs.forEach(function (obj) { obj.render(ctx, timing); });
 	};
 
 	Scene.prototype.flush = function () {
@@ -101,7 +105,7 @@ var Game = (function () {
 		var hits = this.scene.queryClick(coords);
 
 		//console.log(hits);
-		hits.forEach(function (hit) { hit.modify(1); });
+		hits.forEach(function (hit) { hit.click(this, this.scene); }, this);
 	};
 
 	Game.prototype.loadState = function (stateFile) {
