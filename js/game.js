@@ -9,25 +9,43 @@ var Game = (function () {
 		this.coords = [0, 0];
 		this.size = [50, 50];
 		this.color = [0, 0, 0];
-		this.mod = 0;
 	}
 
 	Obj.prototype.render = function (ctx, timing) {
-		var color = this.color.slice();
+		if (this.animating && this.animating.time > 0) {
+			if (this.animating.velocity) {
+				this.coords[0] += this.animating.velocity[0] * timing.step;
+				this.coords[1] += this.animating.velocity[1] * timing.step;
+			}
+			else {
+				this.animating.velocity = [
+					(this.animating.to[0] - this.coords[0]) / this.animating.time,
+					(this.animating.to[1] - this.coords[1]) / this.animating.time,
+				];
+			}
 
-		if (this.mod >= 0) {
-			var mod = this.mod--;
-			color = this.color.map(function (c) { return c + mod; });
+			this.animating.time -= timing.step;
 		}
-		else
-			this.mod = 0;
+		else if (this.animating) {
+			this.coords = this.animating.to;
+			this.animating = undefined;
+		}
 
-		ctx.fillStyle = "rgb("+ color.join(",") +")";
+		ctx.fillStyle = "rgb("+ this.color.join(",") +")";
 		ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
 	};
 
-	Obj.prototype.click = function (time) {
-		this.mod = 100;
+	Obj.prototype.click = function (game, scene) {
+	};
+
+	Obj.prototype.animate = function (to, time) {
+		if (time === undefined)
+			time = 1000;
+
+		this.animating = {
+			'to': to,
+			'time': time
+		};
 	};
 
 	function Button (options) {
@@ -42,6 +60,16 @@ var Game = (function () {
 
 	Button.prototype.click = function (game, scene) {
 		game.pushState(game.loadState(this.state));
+	};
+
+	Button.prototype.render = function (ctx, timing) {
+		Obj.prototype.render.call(this, ctx, timing);
+
+		ctx.font = "400 16px sans-serif";
+		ctx.textAlign = "center";
+
+		ctx.fillStyle = "rgb(255, 255, 255)";
+		ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
 	};
 
 	function Scene () {
@@ -64,6 +92,8 @@ var Game = (function () {
 	};
 
 	Scene.prototype.render = function (ctx, timing) {
+		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
 		this.objs.forEach(function (obj) { obj.render(ctx, timing); });
 	};
 
@@ -88,7 +118,7 @@ var Game = (function () {
 	}
 
 	Game.prototype.step = function () {
-		this.timing.step = this.timing.last - Date.now();
+		this.timing.step = Date.now() - this.timing.last;
 		this.timing.last = Date.now();
 
 		if (this.scene)
@@ -114,7 +144,7 @@ var Game = (function () {
 		ejs.xhr('GET').callback((function (xhr, data) {
 			if (data.menu) {
 				data.menu.options.forEach(function (option) {
-					scene.add(new Button(option));
+					scene.add(new Button(option)).animate([200,200], 500);
 				}, this);
 			}
 
