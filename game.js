@@ -1,4 +1,7 @@
 var Game = (function () {
+
+	"use strict";
+
 	var canvas,
 		context;
 
@@ -27,6 +30,9 @@ var Game = (function () {
 		this.mod = 100;
 	};
 
+	function Button () {
+	}
+
 	function Scene () {
 		this.objs = [];
 	}
@@ -51,11 +57,9 @@ var Game = (function () {
 	};
 
 	function Game (id) {
-		var self = this;
-
 		canvas = document.getElementById(id);
 		context = canvas.getContext('2d');
-		canvas.addEventListener('click', function (evt) { self.clickController(evt); });
+		canvas.addEventListener('click', this.clickController.bind(this));
 
 		this.scene = new Scene();
 		this.scene.add(new Obj()).coords = [50, 50];
@@ -65,14 +69,13 @@ var Game = (function () {
 		o.color = [50, 200, 0];
 		this.scene.add(o);
 
-		requestAnimationFrame(function () { self.step() }, canvas);
+		requestAnimationFrame(this.step.bind(this), canvas);
 	}
 
 	Game.prototype.step = function () {
 		this.scene.render(context);
 
-		var self = this;
-		requestAnimationFrame(function () { self.step() }, canvas);
+		requestAnimationFrame(this.step.bind(this), canvas);
 	};
 
 	Game.prototype.clickController = function (evt) {
