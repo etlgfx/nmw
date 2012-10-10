@@ -2,9 +2,12 @@ var Game = (function () {
 
 	"use strict";
 
-	var canvas,
-		context;
-
+	var canvas, context;
+	
+	/**
+	* Obj is the fundamental object from which all
+	* other game objects are polymorphed.
+	*/
 	function Obj () {
 		this.coords = [0, 0];
 		this.size = [50, 50];
@@ -37,6 +40,12 @@ var Game = (function () {
 
 	Obj.prototype.click = function (game, scene) {
 	};
+	
+	Obj.prototype.mouseOver = function (game, scene) {
+	};
+	
+	Obj.prototype.mouseOut = function (game, scene) {
+	};
 
 	Obj.prototype.animate = function (to, time) {
 		if (time === undefined)
@@ -48,6 +57,9 @@ var Game = (function () {
 		};
 	};
 
+	/**
+	* Obj.Button makes for nice buttons to you for click.
+	*/
 	function Button (options) {
 		Obj.call(this);
 
@@ -72,6 +84,34 @@ var Game = (function () {
 		ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
 	};
 
+	/**
+	* Obj.Building is a standard in game object.
+	* it cannot move
+	* it can store other objects
+	* it has a health meter from 0 to 100 
+	* 
+	*/
+	function Building (options) {
+		Obj.call(this);
+		this.size = [100, 30];
+		this.title = 'building';
+	}
+
+	Building.prototype = new Obj();
+
+	Building.prototype.render = function (ctx, timing) {
+		Obj.prototype.render.call(this, ctx, timing);
+
+		ctx.font = "400 16px sans-serif";
+		ctx.textAlign = "center";
+
+		ctx.fillStyle = "rgb(255, 255, 255)";
+		ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
+	};
+
+	/**
+	* Obj.Scene holds all of the game objects
+	*/
 	function Scene () {
 		this.objs = [];
 	}
@@ -100,7 +140,11 @@ var Game = (function () {
 	Scene.prototype.flush = function () {
 		this.objs = [];
 	};
-
+	
+	/**
+	* Game is the objecct that runs the loop and 
+	* makes the game universe go.
+	*/
 	function Game (id) {
 		canvas = document.getElementById(id);
 		context = canvas.getContext('2d');
@@ -151,6 +195,13 @@ var Game = (function () {
 			if (data.units) {
 				data.units.forEach(function (unit) {
 					scene.add(new Obj()).coords = unit.coords;
+				}, this);
+			}
+
+			
+			if (data.buildings) {
+				data.buildings.forEach(function (building) {
+					scene.add(new Building()).coords = building.coords;
 				}, this);
 			}
 		}).bind(this)).send(stateFile);
