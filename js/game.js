@@ -89,7 +89,6 @@ var Game = (function () {
 	Game.prototype.clickController = function (evt) {
 		if (!this.scene)
 			return;
-		console.log(evt);
 
 		var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
 		var hits = this.scene.queryClick(coords);
