@@ -1,3 +1,0 @@
-[submodule "vendors/ejs"]
-	path = vendors/ejs
-	url = git@github.com:etlgfx/ejs.git
