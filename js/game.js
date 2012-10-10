@@ -59,15 +59,8 @@ var Game = (function () {
 	function Game (id) {
 		canvas = document.getElementById(id);
 		context = canvas.getContext('2d');
+
 		canvas.addEventListener('click', this.clickController.bind(this));
-
-		this.scene = new Scene();
-		this.scene.add(new Obj()).coords = [50, 50];
-
-		var o = new Obj();
-		o.coords = [150, 150];
-		o.color = [50, 200, 0];
-		this.scene.add(o);
 
 		requestAnimationFrame(this.step.bind(this), canvas);
 	}
@@ -81,6 +74,14 @@ var Game = (function () {
 	Game.prototype.clickController = function (evt) {
 		var coords = [evt.clientX - evt.target.offsetLeft, evt.clientY - evt.target.offsetTop];
 		this.scene.queryClick(coords)[0].modify(1);
+	};
+
+	Game.prototype.loadState = function (stateFile) {
+		ejs.xhr('GET').callback((function (data) {
+			data.units.forEach(function (unit) {
+				this.scene.add(new Obj()).coords = unit.coords;
+			}, this);
+		}).bind(this)).send(stateFile);
 	};
 
 	return Game;
