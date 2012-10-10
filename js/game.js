@@ -12,7 +12,7 @@ var Game = (function () {
 		this.mod = 0;
 	}
 
-	Obj.prototype.render = function (ctx) {
+	Obj.prototype.render = function (ctx, timing) {
 		var color = this.color.slice();
 
 		if (this.mod >= 0) {
@@ -56,11 +56,20 @@ var Game = (function () {
 		this.objs.forEach(function (obj) { obj.render(ctx); });
 	};
 
+	Scene.prototype.flush = function () {
+		this.objs = [];
+	};
+
 	function Game (id) {
 		canvas = document.getElementById(id);
 		context = canvas.getContext('2d');
 
-		this.scene = new Scene();
+		this.sceneStack = [];
+		this.scene = null;
+		this.timing = {
+			'start': Date.now(),
+			'last': Date.now(),
+		};
 
 		canvas.addEventListener('click', this.clickController.bind(this));
 
@@ -68,12 +77,19 @@ var Game = (function () {
 	}
 
 	Game.prototype.step = function () {
-		this.scene.render(context);
+		this.timing.step = this.timing.last - Date.now();
+		this.timing.last = Date.now();
+
+		if (this.scene)
+			this.scene.render(context, this.timing);
 
 		requestAnimationFrame(this.step.bind(this), canvas);
 	};
 
 	Game.prototype.clickController = function (evt) {
+		if (!this.scene)
+			return;
+
 		var coords = [evt.clientX - evt.target.offsetLeft, evt.clientY - evt.target.offsetTop];
 		var hits = this.scene.queryClick(coords);
 
@@ -81,11 +97,34 @@ var Game = (function () {
 	};
 
 	Game.prototype.loadState = function (stateFile) {
+		var scene = new Scene();
+
 		ejs.xhr('GET').callback((function (xhr, data) {
 			data.units.forEach(function (unit) {
-				this.scene.add(new Obj()).coords = unit.coords;
+				scene.add(new Obj()).coords = unit.coords;
 			}, this);
 		}).bind(this)).send(stateFile);
+
+		return scene;
+	};
+
+	Game.prototype.popState = function () {
+		var lastScene = this.sceneStack.pop();
+
+		this.scene = this.sceneStack[this.sceneStack.length - 1];
+
+		return lastScene;
+	};
+
+	Game.prototype.pushState = function (scene) {
+		if (!scene instanceof Scene) {
+			throw "not a scene";
+		}
+
+		this.sceneStack.push(scene);
+		this.scene = scene;
+
+		return scene;
 	};
 
 	return Game;

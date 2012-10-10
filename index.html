@@ -7,14 +7,14 @@
 				text-align: center;
 			}
 			body {
-				background: rgb(255, 255, 255);
+				background: rgb(225, 225, 225);
 				color: rgb(64, 64, 64);
 				font-family: deja vu sans, tahoma, helvetica, arial, sans-serif;
 				margin: auto;
 				width: 640px;
 			}
 			canvas {
-				border: 1px solid red;
+				background: rgb(255, 255, 255);
 			}
 		</style>
 	</head>
@@ -28,7 +28,7 @@
 		</script>
 		<script type="text/javascript">
 			var game = new Game('game');
-			game.loadState('data/1.json');
+			game.pushState(game.loadState('data/1.json'));
 		</script>
 	</body>
 </html>
