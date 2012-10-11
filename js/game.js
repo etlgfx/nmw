@@ -68,7 +68,7 @@ var Game = (function () {
     Button.prototype = new Obj();
 
     Button.prototype.click = function (game, scene) {
-        game.pushState(game.loadState(this.state));
+        /*game.pushState(*/game.loadState(this.state)/*)*/;
     };
 
     Button.prototype.render = function (ctx, timing) {
@@ -138,18 +138,34 @@ var Game = (function () {
         this.actions.fade = {
             "color": color,
             "callback": callback,
-            "time": time
+            "time": time,
+            "totalTime": time,
+            "opacity": 0,
         };
     };
 
     Scene.prototype.delete = function () {
-        this.actions.delete = true;;
+        this.actions.delete = true;
     };
 
     Scene.prototype.render = function (ctx, timing) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         this.objs.forEach(function (obj) { obj.render(ctx, timing); });
+
+        if (this.actions.fade) {
+            this.actions.fade.opacity += (timing.step / this.actions.fade.totalTime)
+            this.actions.fade.time -= timing.step;
+
+            ctx.fillStyle = 'rgba('+ this.actions.fade.color.join(',') +','+ this.actions.fade.opacity +')';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+            if (this.actions.fade.time <= 0)
+            {
+                delete this.actions.fade;
+                this.actions.delete = true;
+            }
+        }
     };
 
     Scene.prototype.flush = function () {
@@ -170,11 +186,11 @@ var Game = (function () {
             'start': Date.now(),
             'last': Date.now(),
         };
+
         this.mouseHandle = {
             'coords': [0,0],
             'lastCoords': [0,0],
         };		
-
 
         canvas.addEventListener('click', this.clickController.bind(this));
         canvas.addEventListener('mousemove', this.mouseMoveController.bind(this));
@@ -236,7 +252,9 @@ var Game = (function () {
     };
 
     Game.prototype.loadState = function (stateFile) {
-        //this.sceneCurrent().fade([255, 255, 255], Scene.);
+        if (this.scene !== null)
+            this.currentScene().fade([255, 128, 0], 1000, null);
+
         var scene = new Scene();
 
         ejs.xhr('GET').callback((function (xhr, data) {
