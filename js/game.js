@@ -134,12 +134,13 @@ var Game = (function () {
         return hits;
     };
 
-    Scene.prototype.fade = function (color, time, callback) {
+    Scene.prototype.fade = function (color, time, inout, callback) {
         this.actions.fade = {
             "color": color,
             "callback": callback,
             "time": time,
             "totalTime": time,
+            "inout": inout,
             "opacity": 0,
         };
     };
@@ -157,13 +158,15 @@ var Game = (function () {
             this.actions.fade.opacity += (timing.step / this.actions.fade.totalTime)
             this.actions.fade.time -= timing.step;
 
-            ctx.fillStyle = 'rgba('+ this.actions.fade.color.join(',') +','+ this.actions.fade.opacity +')';
+            ctx.fillStyle = 'rgba('+ this.actions.fade.color.join(',') +','+ (this.actions.fade.inout == 'in' ? 1 - this.actions.fade.opacity : this.actions.fade.opacity) +')';
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
             if (this.actions.fade.time <= 0)
             {
+                if (this.actions.fade.inout == 'out')
+                    this.actions.delete = true;
+
                 delete this.actions.fade;
-                this.actions.delete = true;
             }
         }
     };
@@ -190,7 +193,7 @@ var Game = (function () {
         this.mouseHandle = {
             'coords': [0,0],
             'lastCoords': [0,0],
-        };		
+        };
 
         canvas.addEventListener('click', this.clickController.bind(this));
         canvas.addEventListener('mousemove', this.mouseMoveController.bind(this));
@@ -227,7 +230,8 @@ var Game = (function () {
                 scene = this.currentScene();
             }
 
-            scene.render(context, this.timing);
+            if (scene !== null)
+                scene.render(context, this.timing);
         }
 
         requestAnimationFrame(this.step.bind(this), canvas);
@@ -253,9 +257,11 @@ var Game = (function () {
 
     Game.prototype.loadState = function (stateFile) {
         if (this.scene !== null)
-            this.currentScene().fade([255, 128, 0], 1000, null);
+            this.currentScene().fade([255, 128, 0], 1000, 'out', null);
 
         var scene = new Scene();
+
+        scene.fade([255, 128, 0], 1000, 'in', null);
 
         ejs.xhr('GET').callback((function (xhr, data) {
             if (data.menu) {
