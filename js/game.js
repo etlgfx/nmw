@@ -116,6 +116,7 @@ var Game = (function () {
      */
     function Scene () {
         this.objs = [];
+        this.actions = {};
     }
 
     Scene.prototype.add = function (obj) {
@@ -131,6 +132,18 @@ var Game = (function () {
         });
 
         return hits;
+    };
+
+    Scene.prototype.fade = function (color, time, callback) {
+        this.actions.fade = {
+            "color": color,
+            "callback": callback,
+            "time": time
+        };
+    };
+
+    Scene.prototype.delete = function () {
+        this.actions.delete = true;;
     };
 
     Scene.prototype.render = function (ctx, timing) {
@@ -169,43 +182,61 @@ var Game = (function () {
         requestAnimationFrame(this.step.bind(this), canvas);
     }
 
+    Game.prototype.currentScene = function () {
+        if (this.scene !== null)
+            return this.sceneStack[this.scene];
+        else
+            return null;
+    };
+
     Game.prototype.step = function () {
         this.timing.step = Date.now() - this.timing.last;
         this.timing.last = Date.now();
 
-        if((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1])) 
+        var scene = this.currentScene();
+
+        if (scene !== null)
         {
-            var hits = this.scene.queryHits(this.mouseHandle.coords);
+            if ((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1])) 
+            {
+                var hits = scene.queryHits(this.mouseHandle.coords);
 
-            hits.forEach(function (hit) { hit.hover(this, this.scene); }, this);
-        }	
+                hits.forEach(function (hit) { hit.hover(this, scene); }, this);
+            }
 
-        if (this.scene)
-            this.scene.render(context, this.timing);
+            if (scene.actions.delete)
+            {
+                this.popState();
+
+                scene = this.currentScene();
+            }
+
+            scene.render(context, this.timing);
+        }
 
         requestAnimationFrame(this.step.bind(this), canvas);
     };
 
     Game.prototype.clickController = function (evt) {
-        if (!this.scene)
+        if (this.scene === null)
             return;
 
         var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
-        var hits = this.scene.queryHits(coords);
+
+        var scene = this.currentScene();
+        var hits = scene.queryHits(coords);
 
         //console.log(hits);
-        hits.forEach(function (hit) { hit.click(this, this.scene); }, this);
+        hits.forEach(function (hit) { hit.click(this, scene); }, this);
     };
 
     Game.prototype.mouseMoveController = function (evt) {
-        if(!this.scene)
-            return;
-
         this.mouseHandle.lastCoords = this.mouseHandle.coords;
         this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
-    }
+    };
 
     Game.prototype.loadState = function (stateFile) {
+        //this.sceneCurrent().fade([255, 255, 255], Scene.);
         var scene = new Scene();
 
         ejs.xhr('GET').callback((function (xhr, data) {
@@ -221,7 +252,6 @@ var Game = (function () {
                 }, this);
             }
 
-
             if (data.buildings) {
                 data.buildings.forEach(function (building) {
                     scene.add(new Building()).coords = building.coords;
@@ -235,18 +265,20 @@ var Game = (function () {
     Game.prototype.popState = function () {
         var lastScene = this.sceneStack.pop();
 
-        this.scene = this.sceneStack[this.sceneStack.length - 1];
+        if (this.sceneStack.length)
+            this.scene = this.sceneStack.length - 1;
+        else
+            this.scene = null;
 
         return lastScene;
     };
 
     Game.prototype.pushState = function (scene) {
-        if (!scene instanceof Scene) {
+        if (!scene instanceof Scene)
             throw "not a scene";
-        }
 
         this.sceneStack.push(scene);
-        this.scene = scene;
+        this.scene = this.sceneStack.length - 1;
 
         return scene;
     };
