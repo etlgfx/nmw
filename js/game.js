@@ -40,13 +40,10 @@ var Game = (function () {
 
 	Obj.prototype.click = function (game, scene) {
 	};
-	
-	Obj.prototype.mouseOver = function (game, scene) {
-	};
-	
-	Obj.prototype.mouseOut = function (game, scene) {
-	};
 
+	Obj.prototype.hover = function (game, scene) {
+	};
+	
 	Obj.prototype.animate = function (to, time) {
 		if (time === undefined)
 			time = 1000;
@@ -95,6 +92,7 @@ var Game = (function () {
 		Obj.call(this);
 		this.size = [100, 30];
 		this.title = 'building';
+		this.textColor = "rgb(255, 255, 255)";
 	}
 
 	Building.prototype = new Obj();
@@ -105,8 +103,12 @@ var Game = (function () {
 		ctx.font = "400 16px sans-serif";
 		ctx.textAlign = "center";
 
-		ctx.fillStyle = "rgb(255, 255, 255)";
+		ctx.fillStyle = this.textColor;
 		ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
+	};
+
+	Building.prototype.hover = function (game, scene) {
+		this.textColor = "rgb(255, 0, 0)";
 	};
 
 	/**
@@ -122,7 +124,7 @@ var Game = (function () {
 		return obj;
 	};
 
-	Scene.prototype.queryClick = function (coords) {
+	Scene.prototype.queryHits = function (coords) {
 		var hits = this.objs.filter(function (obj) {
 			return coords[0] >= obj.coords[0] && coords[0] <= (obj.coords[0] + obj.size[0]) &&
 				coords[1] >= obj.coords[1] && coords[1] <= (obj.coords[1] + obj.size[1])
@@ -155,8 +157,14 @@ var Game = (function () {
 			'start': Date.now(),
 			'last': Date.now(),
 		};
+		this.mouseHandle = {
+			'coords': [0,0],
+			'lastCoords': [0,0],
+		};		
+
 
 		canvas.addEventListener('click', this.clickController.bind(this));
+		canvas.addEventListener('mousemove', this.mouseMoveController.bind(this));
 
 		requestAnimationFrame(this.step.bind(this), canvas);
 	}
@@ -164,6 +172,13 @@ var Game = (function () {
 	Game.prototype.step = function () {
 		this.timing.step = Date.now() - this.timing.last;
 		this.timing.last = Date.now();
+
+		if((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1])) 
+		{
+			var hits = this.scene.queryHits(this.mouseHandle.coords);
+			
+			hits.forEach(function (hit) { hit.hover(this, this.scene); }, this);
+		}	
 
 		if (this.scene)
 			this.scene.render(context, this.timing);
@@ -176,11 +191,19 @@ var Game = (function () {
 			return;
 
 		var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
-		var hits = this.scene.queryClick(coords);
+		var hits = this.scene.queryHits(coords);
 
 		//console.log(hits);
 		hits.forEach(function (hit) { hit.click(this, this.scene); }, this);
 	};
+	
+	Game.prototype.mouseMoveController = function (evt) {
+		if(!this.scene)
+			return;		
+		
+		this.mouseHandle.lastCoords = this.mouseHandle.coords;
+		this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
+	}
 
 	Game.prototype.loadState = function (stateFile) {
 		var scene = new Scene();
