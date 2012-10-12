@@ -68,7 +68,7 @@ var Game = (function () {
     Button.prototype = new Obj();
 
     Button.prototype.click = function (game, scene) {
-        /*game.pushState(*/game.loadState(this.state)/*)*/;
+        game.pushState(game.loadState(this.state));
     };
 
     Button.prototype.render = function (ctx, timing) {
@@ -257,11 +257,11 @@ var Game = (function () {
 
     Game.prototype.loadState = function (stateFile) {
         if (this.scene !== null)
-            this.currentScene().fade([255, 128, 0], 1000, 'out', null);
+            this.currentScene().fade([255, 255, 255], 200, 'out', null);
 
         var scene = new Scene();
 
-        scene.fade([255, 128, 0], 1000, 'in', null);
+        scene.fade([255, 255, 255], 200, 'in', null);
 
         ejs.xhr('GET').callback((function (xhr, data) {
             if (data.menu) {
