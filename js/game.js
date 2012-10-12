@@ -4,6 +4,11 @@ var Game = (function () {
 
     var canvas, context;
 
+    Array.prototype.diff = function(a) {
+        return this.filter(function(i) {return !(a.indexOf(i) > -1);});
+    };
+
+
     /**
      * Obj is the fundamental object from which all
      * other game objects are polymorphed.
@@ -41,7 +46,10 @@ var Game = (function () {
     Obj.prototype.click = function (game, scene) {
     };
 
-    Obj.prototype.hover = function (game, scene) {
+    Obj.prototype.hoverOn = function (game, scene) {
+    };
+
+    Obj.prototype.hoverOff = function (game, scene) {
     };
 
     Obj.prototype.animate = function (to, time) {
@@ -107,8 +115,12 @@ var Game = (function () {
         ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
     };
 
-    Building.prototype.hover = function (game, scene) {
+    Building.prototype.hoverOn = function (game, scene) {
         this.textColor = "rgb(255, 0, 0)";
+    };
+
+    Building.prototype.hoverOff = function (game, scene) {
+        this.textColor = "rgb(255, 255, 255)";
     };
 
     /**
@@ -189,6 +201,7 @@ var Game = (function () {
             'start': Date.now(),
             'last': Date.now(),
         };
+	this.lastHoverHits = [];
 
         this.mouseHandle = {
             'coords': [0,0],
@@ -220,7 +233,13 @@ var Game = (function () {
             {
                 var hits = scene.queryHits(this.mouseHandle.coords);
 
-                hits.forEach(function (hit) { hit.hover(this, scene); }, this);
+                var diffHitsExiting = this.lastHoverHits.diff(hits);
+                var diffHitsEntering = hits.diff(this.lastHoverHits);
+
+                this.lastHoverHits = hits;
+                
+                diffHitsEntering.forEach(function (hit) { hit.hoverOn(this, scene); }, this);
+                diffHitsExiting.forEach(function (hit) { hit.hoverOff(this, scene); }, this);
             }
 
             if (scene.actions.delete)

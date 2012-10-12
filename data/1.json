@@ -1,5 +1,5 @@
 {
-    "units":[{"type":1,"coords":[40,50]},{"type":2,"coords":[140,250]}],
+    "units":[{"type":1,"coords":[130,240]},{"type":2,"coords":[140,250]}],
     "buildings":[
         {"type":"depot","coords":[400,100],"health":50},
         {"type":"garage","coords":[400,200],"health":50}
