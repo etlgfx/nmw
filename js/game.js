@@ -187,25 +187,25 @@ var Game = (function () {
         this.objs = [];
     };
 
-	Scene.prototype.load = function (data, game) {
-		if (data.menu) {
-			data.menu.options.forEach(function (option) {
-				this.add(new Button(option)).animate([200,200], 500);
-			}, this);
-		}
+    Scene.prototype.load = function (data, game) {
+        if (data.menu) {
+            data.menu.options.forEach(function (option) {
+                this.add(new Button(option)).animate([200,200], 500);
+            }, this);
+        }
 
-		if (data.units) {
-			data.units.forEach(function (unit) {
-				this.add(new Obj()).coords = unit.coords;
-			}, this);
-		}
+        if (data.units) {
+            data.units.forEach(function (unit) {
+                this.add(new Obj()).coords = unit.coords;
+            }, this);
+        }
 
-		if (data.buildings) {
-			data.buildings.forEach(function (building) {
-				this.add(new Building()).coords = building.coords;
-			}, this);
-		}
-	};
+        if (data.buildings) {
+            data.buildings.forEach(function (building) {
+                this.add(new Building()).coords = building.coords;
+            }, this);
+        }
+    };
 
     /**
      * Game is the objecct that runs the loop and 
@@ -221,7 +221,8 @@ var Game = (function () {
             'start': Date.now(),
             'last': Date.now(),
         };
-	this.lastHoverHits = [];
+
+        this.lastHoverHits = [];
 
         this.mouseHandle = {
             'coords': [0,0],
@@ -249,7 +250,7 @@ var Game = (function () {
 
         if (scene !== null)
         {
-            if ((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1])) 
+            if ((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1]))
             {
                 var hits = scene.queryHits(this.mouseHandle.coords);
 
@@ -257,7 +258,7 @@ var Game = (function () {
                 var diffHitsEntering = hits.diff(this.lastHoverHits);
 
                 this.lastHoverHits = hits;
-                
+
                 diffHitsEntering.forEach(function (hit) { hit.hoverOn(this, scene); }, this);
                 diffHitsExiting.forEach(function (hit) { hit.hoverOff(this, scene); }, this);
             }
@@ -297,14 +298,14 @@ var Game = (function () {
     Game.prototype.loadState = function (state) {
         var scene = new Scene();
 
-		if (typeof state == "string") {
-			ejs.xhr('GET').callback((function (xhr, data) {
-				scene.load(data, this);
-			}).bind(this)).send(state);
-		}
-		else {
-			scene.load(data, this);
-		}
+        if (typeof state == "string") {
+            ejs.xhr('GET').callback((function (xhr, data) {
+                scene.load(data, this);
+            }).bind(this)).send(state);
+        }
+        else {
+            scene.load(data, this);
+        }
 
         return scene;
     };
