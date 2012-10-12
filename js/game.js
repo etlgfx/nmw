@@ -175,6 +175,26 @@ var Game = (function () {
         this.objs = [];
     };
 
+	Scene.prototype.load = function (data, game) {
+		if (data.menu) {
+			data.menu.options.forEach(function (option) {
+				this.add(new Button(option)).animate([200,200], 500);
+			}, this);
+		}
+
+		if (data.units) {
+			data.units.forEach(function (unit) {
+				this.add(new Obj()).coords = unit.coords;
+			}, this);
+		}
+
+		if (data.buildings) {
+			data.buildings.forEach(function (building) {
+				this.add(new Building()).coords = building.coords;
+			}, this);
+		}
+	};
+
     /**
      * Game is the objecct that runs the loop and 
      * makes the game universe go.
@@ -255,33 +275,17 @@ var Game = (function () {
         this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
     };
 
-    Game.prototype.loadState = function (stateFile) {
-        if (this.scene !== null)
-            this.currentScene().fade([255, 255, 255], 200, 'out', null);
-
+    Game.prototype.loadState = function (state) {
         var scene = new Scene();
 
-        scene.fade([255, 255, 255], 200, 'in', null);
-
-        ejs.xhr('GET').callback((function (xhr, data) {
-            if (data.menu) {
-                data.menu.options.forEach(function (option) {
-                    scene.add(new Button(option)).animate([200,200], 500);
-                }, this);
-            }
-
-            if (data.units) {
-                data.units.forEach(function (unit) {
-                    scene.add(new Obj()).coords = unit.coords;
-                }, this);
-            }
-
-            if (data.buildings) {
-                data.buildings.forEach(function (building) {
-                    scene.add(new Building()).coords = building.coords;
-                }, this);
-            }
-        }).bind(this)).send(stateFile);
+		if (typeof state == "string") {
+			ejs.xhr('GET').callback((function (xhr, data) {
+				scene.load(data, this);
+			}).bind(this)).send(state);
+		}
+		else {
+			scene.load(data, this);
+		}
 
         return scene;
     };
