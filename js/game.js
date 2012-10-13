@@ -5,9 +5,8 @@ var Game = (function () {
     var canvas, context;
 
     Array.prototype.diff = function(a) {
-        return this.filter(function(i) {return !(a.indexOf(i) > -1);});
+        return this.filter(function(i) { return !(a.indexOf(i) > -1); });
     };
-
 
     /**
      * Obj is the fundamental object from which all
@@ -76,7 +75,12 @@ var Game = (function () {
     Button.prototype = new Obj();
 
     Button.prototype.click = function (game, scene) {
-        game.pushState(game.loadState(this.state));
+        var currentScene = game.currentScene();
+        currentScene.fade([255, 255, 255], 300, 'out', currentScene.delete.bind(currentScene));
+
+        var newscene = game.loadState(this.state);
+        newscene.fade([255, 255, 255], 300, 'in');
+        game.queueState(newscene);
     };
 
     Button.prototype.render = function (ctx, timing) {
@@ -158,11 +162,17 @@ var Game = (function () {
     };
 
     Scene.prototype.delete = function () {
+        console.log('delete', this);
         this.actions.delete = true;
     };
 
     Scene.prototype.render = function (ctx, timing) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        if (this.actions.loading) {
+            console.log('still loading', this);
+            return;
+        }
 
         this.objs.forEach(function (obj) { obj.render(ctx, timing); });
 
@@ -175,8 +185,10 @@ var Game = (function () {
 
             if (this.actions.fade.time <= 0)
             {
-                if (this.actions.fade.inout == 'out')
-                    this.actions.delete = true;
+                if (this.actions.fade.callback)
+                {
+                    this.actions.fade.callback();
+                }
 
                 delete this.actions.fade;
             }
@@ -208,7 +220,7 @@ var Game = (function () {
     };
 
     /**
-     * Game is the objecct that runs the loop and 
+     * Game is the object that runs the loop and 
      * makes the game universe go.
      */
     function Game (id) {
@@ -299,8 +311,12 @@ var Game = (function () {
         var scene = new Scene();
 
         if (typeof state == "string") {
+            scene.actions.loading = true;
+
             ejs.xhr('GET').callback((function (xhr, data) {
                 scene.load(data, this);
+
+                delete scene.actions.loading;
             }).bind(this)).send(state);
         }
         else {
@@ -329,6 +345,19 @@ var Game = (function () {
         this.scene = this.sceneStack.length - 1;
 
         return scene;
+    };
+
+    Game.prototype.queueState = function (scene) {
+        if (!scene instanceof Scene)
+            throw "not a scene";
+
+        if (this.sceneStack.length) {
+            this.sceneStack.splice(-1, 0, scene);
+            this.scene++;
+        }
+        else {
+            this.pushState(scene);
+        }
     };
 
     return Game;
