@@ -170,7 +170,9 @@ var Game = (function () {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         if (this.actions.loading) {
-            console.log('still loading', this);
+            ctx.fillStyle = 'rgb(255, 0, 0)';
+            ctx.font = "italic 400 12px sans-serif";
+            ctx.fillText('loading...', ctx.canvas.width - 100, ctx.canvas.height - 10);
             return;
         }
 
@@ -316,7 +318,7 @@ var Game = (function () {
             ejs.xhr('GET').callback((function (xhr, data) {
                 scene.load(data, this);
 
-                delete scene.actions.loading;
+                setTimeout(function () { delete scene.actions.loading; }, 1000);
             }).bind(this)).send(state);
         }
         else {
