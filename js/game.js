@@ -317,8 +317,7 @@ var Game = (function () {
 
             ejs.xhr('GET').callback((function (xhr, data) {
                 scene.load(data, this);
-
-                setTimeout(function () { delete scene.actions.loading; }, 1000);
+                delete scene.actions.loading;
             }).bind(this)).send(state);
         }
         else {
