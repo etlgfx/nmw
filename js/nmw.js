@@ -1,2 +1,2 @@
 var game = new Game('game');
-game.pushState(game.loadState('data/menu.json'));
+game.pushScene(game.loadScene('data/menu.json'));

@@ -151,9 +151,9 @@ var Game = (function () {
         var currentScene = game.currentScene();
         currentScene.fade([255, 255, 255], 300, 'out', currentScene.delete.bind(currentScene));
 
-        var newscene = game.loadState(this.state);
+        var newscene = game.loadScene(this.state);
         newscene.fade([255, 255, 255], 300, 'in');
-        game.queueState(newscene);
+        game.queueScene(newscene);
     };
 
     /**
@@ -570,7 +570,7 @@ var Game = (function () {
 
             if (scene.actions.delete)
             {
-                this.popState();
+                this.popScene();
 
                 scene = this.currentScene();
             }
@@ -620,22 +620,22 @@ var Game = (function () {
      *
      * @return {Scene} the newly created / loaded scene
      */
-    Game.prototype.loadState = function (state) {
-        var scene = new Scene();
+    Game.prototype.loadScene = function (scene) {
+        var newscene = new Scene();
 
-        if (typeof state == "string") {
-            scene.actions.loading = true;
+        if (typeof scene == "string") {
+            newscene.actions.loading = true;
 
             ejs.xhr('GET').callback((function (xhr, data) {
-                scene.load(this, data);
-                delete scene.actions.loading;
-            }).bind(this)).send(state);
+                newscene.load(this, data);
+                delete newscene.actions.loading;
+            }).bind(this)).send(scene);
         }
         else {
-            scene.load(this, data);
+            newscene.load(this, data);
         }
 
-        return scene;
+        return newscene;
     };
 
     /**
@@ -643,7 +643,7 @@ var Game = (function () {
      *
      * @return {Scene} the top of the stack
      */
-    Game.prototype.popState = function () {
+    Game.prototype.popScene = function () {
         var lastScene = this.sceneStack.pop();
 
         if (this.sceneStack.length)
@@ -661,7 +661,7 @@ var Game = (function () {
      *
      * @return {Scene} the scene we just pushed
      */
-    Game.prototype.pushState = function (scene) {
+    Game.prototype.pushScene = function (scene) {
         if (!scene instanceof Scene)
             throw "not a scene";
 
@@ -678,7 +678,7 @@ var Game = (function () {
      *
      * @return {Scene}
      */
-    Game.prototype.queueState = function (scene) {
+    Game.prototype.queueScene = function (scene) {
         if (!scene instanceof Scene)
             throw "not a scene";
 
@@ -687,7 +687,7 @@ var Game = (function () {
             this.scene++;
         }
         else {
-            this.pushState(scene);
+            this.pushScene(scene);
         }
 
         return scene;
