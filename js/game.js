@@ -4,11 +4,20 @@ var Game = (function () {
 
     var canvas, context;
 
+    /**
+     * Calculate the difference in elements between two arrays
+     *
+     * @param {Array} a - array to compare to
+     *
+     * @return {Array} an Array of the elements that weren't in Array a
+     */
     Array.prototype.diff = function(a) {
         return this.filter(function(i) { return !(a.indexOf(i) > -1); });
     };
 
     /**
+     * @constructor
+     *
      * Obj is the fundamental object from which all
      * other game objects are polymorphed.
      */
@@ -18,6 +27,12 @@ var Game = (function () {
         this.color = [0, 0, 0];
     }
 
+    /**
+     * render method
+     *
+     * @param {context} ctx - canvas rendering context
+     * @param {object} timing - a set of timing data
+     */
     Obj.prototype.render = function (ctx, timing) {
         if (this.animating && this.animating.time > 0) {
             if (this.animating.velocity) {
@@ -28,7 +43,7 @@ var Game = (function () {
                 this.animating.velocity = [
                     (this.animating.to[0] - this.coords[0]) / this.animating.time,
                     (this.animating.to[1] - this.coords[1]) / this.animating.time,
-                    ];
+                ];
             }
 
             this.animating.time -= timing.step;
@@ -42,15 +57,39 @@ var Game = (function () {
         ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
     };
 
+    /**
+     * default click handler
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Obj.prototype.click = function (game, scene) {
     };
 
+    /**
+     * default hover (mouseOver) handler
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Obj.prototype.hoverOn = function (game, scene) {
     };
 
+    /**
+     * default hover (mouseOut) handler
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Obj.prototype.hoverOff = function (game, scene) {
     };
 
+    /**
+     * Simple animation method. So far only animates position
+     *
+     * @param {Array} to - [x, y] coordinates
+     * @param {Number} time - in milliseconds
+     */
     Obj.prototype.animate = function (to, time) {
         if (time === undefined)
             time = 1000;
@@ -62,7 +101,12 @@ var Game = (function () {
     };
 
     /**
-     * Obj.Button makes for nice buttons to you for click.
+     * @constructor
+     * @extends Obj
+     *
+     * Button makes for nice buttons for you to click.
+     *
+     * @param {object} options
      */
     function Button (options) {
         Obj.call(this);
@@ -74,6 +118,13 @@ var Game = (function () {
 
     Button.prototype = new Obj();
 
+    /**
+     * override default click handler from Obj.
+     * For now load the state specified in the this.state URL
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Button.prototype.click = function (game, scene) {
         var currentScene = game.currentScene();
         currentScene.fade([255, 255, 255], 300, 'out', currentScene.delete.bind(currentScene));
@@ -83,6 +134,12 @@ var Game = (function () {
         game.queueState(newscene);
     };
 
+    /**
+     * override default render method
+     *
+     * @param {context} ctx
+     * @param {object} timing
+     */
     Button.prototype.render = function (ctx, timing) {
         Obj.prototype.render.call(this, ctx, timing);
 
@@ -94,11 +151,15 @@ var Game = (function () {
     };
 
     /**
+     * @constructor
+     * @extends Obj
+     *
      * Obj.Building is a standard in game object.
      * it cannot move
      * it can store other objects
      * it has a health meter from 0 to 100 
      * 
+     * @param {object} options
      */
     function Building (options) {
         Obj.call(this);
@@ -109,6 +170,12 @@ var Game = (function () {
 
     Building.prototype = new Obj();
 
+    /**
+     * override default render method
+     *
+     * @param {context} ctx
+     * @param {object} timing
+     */
     Building.prototype.render = function (ctx, timing) {
         Obj.prototype.render.call(this, ctx, timing);
 
@@ -119,28 +186,54 @@ var Game = (function () {
         ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
     };
 
+    /**
+     * override default hover (mouseOver) handler
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Building.prototype.hoverOn = function (game, scene) {
         this.textColor = "rgb(255, 0, 0)";
     };
 
+    /**
+     * override default hover (mouseOut) handler
+     *
+     * @param {Game} game
+     * @param {Scene} scene
+     */
     Building.prototype.hoverOff = function (game, scene) {
         this.textColor = "rgb(255, 255, 255)";
     };
 
     /**
-     * Obj.Scene holds all of the game objects
+     * @constructor
+     *
+     * Scene holds all of the game objects in the current state or scene
      */
     function Scene () {
         this.objs = [];
         this.actions = {};
     }
 
+    /**
+     * add a new object to the scene
+     *
+     * @param {Obj} obj
+     */
     Scene.prototype.add = function (obj) {
         this.objs.push(obj);
 
         return obj;
     };
 
+    /**
+     * hit detection, based on point & bounding rectangle
+     *
+     * @param {Array} coords - [x, y]
+     *
+     * @return {Array(Obj)} a list of objects that were hit
+     */
     Scene.prototype.queryHits = function (coords) {
         var hits = this.objs.filter(function (obj) {
             return coords[0] >= obj.coords[0] && coords[0] <= (obj.coords[0] + obj.size[0]) &&
@@ -150,6 +243,14 @@ var Game = (function () {
         return hits;
     };
 
+    /**
+     * trigger a fade transition effect on the scene
+     *
+     * @param {Array} color - [r, g, b]
+     * @param {Number} time - ms
+     * @param {String} inout - enum (in, out)
+     * @param {Function} callback - function to call after fade is finished
+     */
     Scene.prototype.fade = function (color, time, inout, callback) {
         this.actions.fade = {
             "color": color,
@@ -161,11 +262,20 @@ var Game = (function () {
         };
     };
 
+    /**
+     * Schedule scene for deletion, the Game object will take care of it on next step()
+     */
     Scene.prototype.delete = function () {
         console.log('delete', this);
         this.actions.delete = true;
     };
 
+    /**
+     * render the scene
+     *
+     * @param {context} ctx
+     * @param {object} timing
+     */
     Scene.prototype.render = function (ctx, timing) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -197,10 +307,21 @@ var Game = (function () {
         }
     };
 
+    /**
+     * remove all objects from the scene
+     */
     Scene.prototype.flush = function () {
         this.objs = [];
     };
 
+    /**
+     * load scene data from an object
+     *
+     * @param {object} data
+     * @param {Game} game
+     *
+     * TODO switch parameters for consistency
+     */
     Scene.prototype.load = function (data, game) {
         if (data.menu) {
             data.menu.options.forEach(function (option) {
@@ -222,12 +343,17 @@ var Game = (function () {
     };
 
     /**
+     * @constructor
+     *
      * Game is the object that runs the loop and 
      * makes the game universe go.
+     *
+     * @param {String} id - id of the canvas element
      */
     function Game (id) {
         canvas = document.getElementById(id);
         context = canvas.getContext('2d');
+        //context.imageSmoothingEnabled = false;
 
         this.sceneStack = [];
         this.scene = null;
@@ -249,6 +375,11 @@ var Game = (function () {
         requestAnimationFrame(this.step.bind(this), canvas);
     }
 
+    /**
+     * Return the current Scene if there is one
+     *
+     * @return {Scene|null}
+     */
     Game.prototype.currentScene = function () {
         if (this.scene !== null)
             return this.sceneStack[this.scene];
@@ -256,6 +387,11 @@ var Game = (function () {
             return null;
     };
 
+    /**
+     * Render loop step(), uses requestAnimationFrame(). Also perform some high
+     * level logic, like deleting scenes, getting timings data, and converting
+     * mouse coords.
+     */
     Game.prototype.step = function () {
         this.timing.step = Date.now() - this.timing.last;
         this.timing.last = Date.now();
@@ -291,6 +427,11 @@ var Game = (function () {
         requestAnimationFrame(this.step.bind(this), canvas);
     };
 
+    /**
+     * Catch all mouse clicks on the canavs, and delegate to scene
+     *
+     * @param {MouseEvent} evt
+     */
     Game.prototype.clickController = function (evt) {
         if (this.scene === null)
             return;
@@ -304,11 +445,23 @@ var Game = (function () {
         hits.forEach(function (hit) { hit.click(this, scene); }, this);
     };
 
+    /**
+     * Capture mouse move events and delay handling until step()
+     *
+     * @param {MouseEvent} evt
+     */
     Game.prototype.mouseMoveController = function (evt) {
         this.mouseHandle.lastCoords = this.mouseHandle.coords;
         this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
     };
 
+    /**
+     * Load a new Scene to use as a game state
+     *
+     * @param {Scene} state - unfortunate variable name
+     *
+     * @return {Scene} the newly created / loaded scene
+     */
     Game.prototype.loadState = function (state) {
         var scene = new Scene();
 
@@ -327,6 +480,11 @@ var Game = (function () {
         return scene;
     };
 
+    /**
+     * remove the top (current) Scene from the stack and return it
+     *
+     * @return {Scene} the top of the stack
+     */
     Game.prototype.popState = function () {
         var lastScene = this.sceneStack.pop();
 
@@ -338,6 +496,13 @@ var Game = (function () {
         return lastScene;
     };
 
+    /**
+     * push a new state onto the stack, this superscedes the current Scene.
+     *
+     * @param {Scene} scene
+     *
+     * @return {Scene} the scene we just pushed
+     */
     Game.prototype.pushState = function (scene) {
         if (!scene instanceof Scene)
             throw "not a scene";
@@ -348,6 +513,13 @@ var Game = (function () {
         return scene;
     };
 
+    /**
+     * Queue a Scene to be shown After the current one finishes
+     *
+     * @param {Scene} scene
+     *
+     * @return {Scene}
+     */
     Game.prototype.queueState = function (scene) {
         if (!scene instanceof Scene)
             throw "not a scene";
@@ -359,6 +531,8 @@ var Game = (function () {
         else {
             this.pushState(scene);
         }
+
+        return scene;
     };
 
     return Game;
