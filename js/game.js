@@ -203,8 +203,8 @@ var Game = (function () {
      * Obj.Building is a standard in game object.
      * it cannot move
      * it can store other objects
-     * it has a health meter from 0 to 100 
-     * 
+     * it has a health meter from 0 to 100
+     *
      * @param {object} options
      */
     function Building (options) {
@@ -238,7 +238,7 @@ var Game = (function () {
      * @param {Game} game
      * @param {Scene} scene
      */
-    Building.prototype.hoverOn = function (game, scene) {
+    Building.prototype.hoverOn = function (game, scene) { //TODO this could be an if stmt in the render function instead of overriding the default callback
         if (this.selected == false){
             this.textColor = "rgb(255, 0, 0)";
         }
@@ -262,7 +262,7 @@ var Game = (function () {
      * @param {Game} game
      * @param {Scene} scene
      */
-    Building.prototype.selectMe = function (game, scene) {
+    Building.prototype.selectMe = function (game, scene) { //TODO this could be an if stmt in the render function instead of overriding the default callback
         this.textColor = "rgb(0, 255, 0)";
     };
 
@@ -318,7 +318,7 @@ var Game = (function () {
     Scene.prototype.queryHits = function (coords) {
         var hits = this.objs.filter(function (obj) {
             return coords[0] >= obj.coords[0] && coords[0] <= (obj.coords[0] + obj.size[0]) &&
-            coords[1] >= obj.coords[1] && coords[1] <= (obj.coords[1] + obj.size[1])
+                coords[1] >= obj.coords[1] && coords[1] <= (obj.coords[1] + obj.size[1]);
         });
 
         return hits;
@@ -359,7 +359,7 @@ var Game = (function () {
     Scene.prototype.render = function (ctx, timing) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-        if (this.actions.loading) {
+        if (this.actions.loading) { //TODO change to a callback?
             ctx.fillStyle = 'rgb(255, 0, 0)';
             ctx.font = "italic 400 12px sans-serif";
             ctx.fillText('loading...', ctx.canvas.width - 100, ctx.canvas.height - 10);
@@ -368,7 +368,7 @@ var Game = (function () {
 
         this.objs.forEach(function (obj) { obj.render(ctx, timing); });
 
-        if (this.actions.fade) {
+        if (this.actions.fade) { //TODO change to callback?
             this.actions.fade.opacity += (timing.step / this.actions.fade.totalTime)
             this.actions.fade.time -= timing.step;
 
@@ -397,14 +397,12 @@ var Game = (function () {
     /**
      * load scene data from an object
      *
-     * @param {object} data
      * @param {Game} game
-     *
-     * TODO switch parameters for consistency
+     * @param {object} data
      */
-    Scene.prototype.load = function (data, game) {
+    Scene.prototype.load = function (game, data) {
 
-        this.selection = new Selection(game, this);
+        this.selection = new Selection(game, this); //TODO have Scene.attachSelectionManager() instead?
 
         if (data.scene) {
             if (data.scene.selection) {
@@ -446,13 +444,13 @@ var Game = (function () {
     /**
      * handle the clicks through the selection manager logic if engaged
      * otherwise pass through to object click handling
-     * 
+     *
      * @param {MouseEvent} evt
      * @param {array} hits
      *
      */
      Selection.prototype.click = function (evt, hits) {
-        if (this.engaged) {
+        if (this.engaged) { //TODO shouldnt need this flag
             if (evt.button == 2) {
                 this.selections.forEach(function (hit) { hit.selected = false; hit.unselectMe(this.game, this.scene); }, this);
                 this.selections = [];
@@ -471,7 +469,7 @@ var Game = (function () {
 
     /**
      * add the passed objects to the selection manager's invetory
-     * 
+     *
      * @param {array} hits
      *
      */
@@ -482,7 +480,7 @@ var Game = (function () {
 
     /**
      * turns the selection manager functionality on/off
-     * 
+     *
      * @param {boolean} engaged
      */
      Selection.prototype.engage = function (engaged) {
@@ -515,11 +513,9 @@ var Game = (function () {
             'last': Date.now(),
         };
 
-        this.selection = null;
+        this.lastHoverHits = []; //TODO move this outside?
 
-        this.lastHoverHits = [];
-
-        this.mouseHandle = {
+        this.mouseHandle = { //TODO move this outside?
             'coords': [0,0],
             'lastCoords': [0,0],
         };
@@ -631,12 +627,12 @@ var Game = (function () {
             scene.actions.loading = true;
 
             ejs.xhr('GET').callback((function (xhr, data) {
-                scene.load(data, this);
+                scene.load(this, data);
                 delete scene.actions.loading;
             }).bind(this)).send(state);
         }
         else {
-            scene.load(data, this);
+            scene.load(this, data);
         }
 
         return scene;
