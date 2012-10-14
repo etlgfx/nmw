@@ -84,7 +84,7 @@ var Game = (function () {
      */
     Obj.prototype.hoverOff = function (game, scene) {
     };
-    
+
     /**
      * default selectMe handler
      * custome event from the selection manager
@@ -94,7 +94,7 @@ var Game = (function () {
      */
     Obj.prototype.selectMe = function () {
     };
-    
+
     /**
      * default unselectMe handler
      * custome event from the selection manager
@@ -167,7 +167,7 @@ var Game = (function () {
         this.selected = true;
         this.textColor = "rgb(0, 255, 255)";
     };
-    
+
     /**
      * override default unselectMe handler from Obj.
      * Change the button text color for render to use
@@ -239,7 +239,7 @@ var Game = (function () {
      * @param {Scene} scene
      */
     Building.prototype.hoverOn = function (game, scene) {
-        if(this.selected == false){
+        if (this.selected == false){
             this.textColor = "rgb(255, 0, 0)";
         }
     };
@@ -251,9 +251,9 @@ var Game = (function () {
      * @param {Scene} scene
      */
     Building.prototype.hoverOff = function (game, scene) {
-        if(this.selected == false) {
+        if (this.selected == false) {
             this.textColor = "rgb(255, 255, 255)";
-        }    
+        }
     };
 
     /**
@@ -275,7 +275,7 @@ var Game = (function () {
     Building.prototype.unselectMe = function (game, scene) {
         this.textColor = "rgb(255, 255, 255)";
     };
-    
+
     /**
      * override default click  handler
      *
@@ -403,15 +403,15 @@ var Game = (function () {
      * TODO switch parameters for consistency
      */
     Scene.prototype.load = function (data, game) {
-        
+
         this.selection = new Selection(game, this);
-        
+
         if (data.scene) {
-            if(data.scene.selection) {
+            if (data.scene.selection) {
                 this.selection.engage(data.scene.selection);
             }
         }
-        
+
         if (data.menu) {
             data.menu.options.forEach(function (option) {
                 this.add(new Button(option)).animate([200,200], 500);
@@ -437,11 +437,10 @@ var Game = (function () {
      * Selection helps track which units are selected and what events they get based on that info.
      */
      function Selection (game, scene) {
-        
         this.game = game;
         this.scene = scene;
         this.selections = [];
-        this.engaged = false;         
+        this.engaged = false;
      }
 
     /**
@@ -453,14 +452,12 @@ var Game = (function () {
      *
      */
      Selection.prototype.click = function (evt, hits) {
-        
-        if(this.engaged) {
-            if(evt.button == 2) {
-            
+        if (this.engaged) {
+            if (evt.button == 2) {
                 this.selections.forEach(function (hit) { hit.selected = false; hit.unselectMe(this.game, this.scene); }, this);
                 this.selections = [];
             }
-            else if(this.selections.length > 0) {
+            else if (this.selections.length > 0) {
                 this.selections.forEach(function (hit) { hit.click(this.game, this.scene); }, this);
             }
             else {
@@ -491,14 +488,14 @@ var Game = (function () {
      *
      */
      Selection.prototype.engage = function (engaged) {
-        if((engaged != undefined) && (typeof engaged == "boolean")) {
+        if ((engaged != undefined) && (typeof engaged == "boolean")) {
             this.engaged = engaged;
         }
         else {
             return this.engaged;
         }
      };
-    
+
     /**
      * Game is the object that runs the loop and 
      * makes the game universe go.
@@ -529,7 +526,7 @@ var Game = (function () {
         canvas.addEventListener('click', this.clickController.bind(this));
         canvas.addEventListener('mousemove', this.mouseMoveController.bind(this));
         canvas.addEventListener('contextmenu', this.clickController.bind(this));
-        
+
         requestAnimationFrame(this.step.bind(this), canvas);
     }
 
@@ -599,11 +596,11 @@ var Game = (function () {
 
         evt.preventDefault();
 
-        var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop]; 
+        var coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
 
         var scene = this.currentScene();
         var hits = scene.queryHits(coords);
-        
+
         scene.selection.click(evt, hits);
 
         //hits.forEach(function (hit) { hit.click(this, scene); }, this);
@@ -616,7 +613,7 @@ var Game = (function () {
      */
     Game.prototype.mouseMoveController = function (evt) {
         this.mouseHandle.lastCoords = this.mouseHandle.coords;
-        this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];    
+        this.mouseHandle.coords = [evt.pageX - evt.target.offsetLeft, evt.pageY - evt.target.offsetTop];
     };
 
     /**
@@ -628,7 +625,7 @@ var Game = (function () {
      */
     Game.prototype.loadState = function (state) {
         var scene = new Scene();
-        
+
         if (typeof state == "string") {
             scene.actions.loading = true;
 
