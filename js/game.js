@@ -478,17 +478,18 @@ var Game = (function () {
      Selection.prototype.add = function (hits) {
         hits.forEach(function (hit) { hit.selected = true; hit.selectMe(this.game, this.scene); }, this);
         this.selections = hits;
-
      };
 
     /**
      * turns the selection manager functionality on/off
      * 
      * @param {boolean} engaged
-     *
      */
      Selection.prototype.engage = function (engaged) {
-        if ((engaged != undefined) && (typeof engaged == "boolean")) {
+        if (engaged != undefined) {
+            if (typeof engaged !== "boolean")
+                throw "invalid type";
+
             this.engaged = engaged;
         }
         else {
@@ -523,9 +524,9 @@ var Game = (function () {
             'lastCoords': [0,0],
         };
 
-        canvas.addEventListener('click', this.clickController.bind(this));
-        canvas.addEventListener('mousemove', this.mouseMoveController.bind(this));
+        canvas.addEventListener('click',       this.clickController.bind(this));
         canvas.addEventListener('contextmenu', this.clickController.bind(this));
+        canvas.addEventListener('mousemove',   this.mouseMoveController.bind(this));
 
         requestAnimationFrame(this.step.bind(this), canvas);
     }
@@ -555,7 +556,7 @@ var Game = (function () {
 
         if (scene !== null)
         {
-            //TODO: find home for this other than render loop.  
+            //TODO: find home for this other than render loop.
             // loop should only do scene mgmt/render stuff proboably.
             // call this from new home instead to make loop cleaner
             if ((this.mouseHandle.lastCoords[0] != this.mouseHandle.coords[0]) || (this.mouseHandle.lastCoords[1] != this.mouseHandle.coords[1]))
