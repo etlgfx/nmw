@@ -86,23 +86,25 @@ var Game = (function () {
     };
 
     /**
-     * default selectMe handler
+     * default select handler
      * custome event from the selection manager
      *
      * @param {Game} game
      * @param {Scene} scene
      */
-    Obj.prototype.selectMe = function () {
+    Obj.prototype.select = function () {
+        this.selected = true;
     };
 
     /**
-     * default unselectMe handler
+     * default deselect handler
      * custome event from the selection manager
      *
      * @param {Game} game
      * @param {Scene} scene
      */
-    Obj.prototype.unselectMe = function () {
+    Obj.prototype.deselect = function () {
+        this.selected = false;
     };
 
     /**
@@ -157,30 +159,6 @@ var Game = (function () {
     };
 
     /**
-     * override default selectMe handler from Obj.
-     * Change the button text color for render to use
-     *
-     * @param {Game} game
-     * @param {Scene} scene
-     */
-    Button.prototype.selectMe = function (game, scene) {
-        this.selected = true;
-        this.textColor = "rgb(0, 255, 255)";
-    };
-
-    /**
-     * override default unselectMe handler from Obj.
-     * Change the button text color for render to use
-     *
-     * @param {Game} game
-     * @param {Scene} scene
-     */
-    Button.prototype.unselectMe = function (game, scene) {
-        this.selected = false;
-        this.textColor = "rgb(255, 255, 255)";
-    };
-
-    /**
      * override default render method
      *
      * @param {context} ctx
@@ -228,7 +206,7 @@ var Game = (function () {
         ctx.font = "400 16px sans-serif";
         ctx.textAlign = "center";
 
-        ctx.fillStyle = this.textColor;
+        ctx.fillStyle = this.selected ? 'rgb(0, 255, 0)' : this.textColor;
         ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
     };
 
@@ -239,7 +217,7 @@ var Game = (function () {
      * @param {Scene} scene
      */
     Building.prototype.hoverOn = function (game, scene) { //TODO this could be an if stmt in the render function instead of overriding the default callback
-        if (this.selected == false){
+        if (this.selected == false) {
             this.textColor = "rgb(255, 0, 0)";
         }
     };
@@ -254,26 +232,6 @@ var Game = (function () {
         if (this.selected == false) {
             this.textColor = "rgb(255, 255, 255)";
         }
-    };
-
-    /**
-     * override default selectMe handler
-     *
-     * @param {Game} game
-     * @param {Scene} scene
-     */
-    Building.prototype.selectMe = function (game, scene) { //TODO this could be an if stmt in the render function instead of overriding the default callback
-        this.textColor = "rgb(0, 255, 0)";
-    };
-
-    /**
-     * override default selectMe handler
-     *
-     * @param {Game} game
-     * @param {Scene} scene
-     */
-    Building.prototype.unselectMe = function (game, scene) {
-        this.textColor = "rgb(255, 255, 255)";
     };
 
     /**
@@ -452,7 +410,7 @@ var Game = (function () {
      Selection.prototype.click = function (evt, hits) {
         if (this.engaged) { //TODO shouldnt need this flag
             if (evt.button == 2) {
-                this.selections.forEach(function (hit) { hit.selected = false; hit.unselectMe(this.game, this.scene); }, this);
+                this.selections.forEach(function (hit) { hit.selected = false; hit.deselect(this.game, this.scene); }, this);
                 this.selections = [];
             }
             else if (this.selections.length > 0) {
@@ -474,7 +432,7 @@ var Game = (function () {
      *
      */
      Selection.prototype.add = function (hits) {
-        hits.forEach(function (hit) { hit.selected = true; hit.selectMe(this.game, this.scene); }, this);
+        hits.forEach(function (hit) { hit.selected = true; hit.select(this.game, this.scene); }, this);
         this.selections = hits;
      };
 
