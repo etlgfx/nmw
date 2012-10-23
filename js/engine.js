@@ -26,6 +26,7 @@ var Game = (function () {
         this.size = [50, 50];
         this.color = [0, 0, 0];
         this.selected = false;
+        this.sprite = null;
     }
 
     /**
@@ -54,8 +55,26 @@ var Game = (function () {
             this.animating = undefined;
         }
 
-        ctx.fillStyle = "rgb("+ this.color.join(",") +")";
-        ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
+        if (this.sprite) {
+            ctx.drawImage(this.sprite, this.coords[0], this.coords[1]);
+        }
+        else {
+            ctx.fillStyle = "rgb("+ this.color.join(",") +")";
+            ctx.fillRect(this.coords[0], this.coords[1], this.size[0], this.size[1]);
+        }
+    };
+
+    /**
+    */
+    Obj.prototype.setSprite = function (uri) {
+        var img = new Image(uri);
+
+        img.onload = (function () {
+            this.sprite = img;
+            this.size = [img.naturalWidth, img.naturalHeight];
+        }).bind(this);
+
+        img.src = uri;
     };
 
     /**
@@ -590,7 +609,7 @@ var Game = (function () {
             }).bind(this)).send(scene);
         }
         else {
-            newscene.load(this, data);
+            newscene.load(this, scene);
         }
 
         return newscene;
@@ -650,6 +669,12 @@ var Game = (function () {
 
         return scene;
     };
+
+    Game.Obj = Obj;
+    Game.Scene = Scene;
+    Game.Button = Button;
+    Game.Building = Building;
+    Game.Selection = Selection;
 
     return Game;
 })();
