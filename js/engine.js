@@ -261,6 +261,20 @@ var Game = (function () {
      */
     Building.prototype.click = function (game, scene) {
         console.log(scene.selection.selections, 'to', this);
+        scene.selection.selections[0].sendUnits(this, 100); //TODO this is awkward as hell
+    };
+
+    /**
+     * send units Units to target Building
+     *
+     * @param {Building} target
+     * @param {Number} units
+     */
+    Building.prototype.sendUnits = function (target, units) {
+        this.sending = {
+            'units': units,
+            'target': target
+        };
     };
 
     /**
@@ -402,8 +416,8 @@ var Game = (function () {
         if (data.buildings) {
             data.buildings.forEach(function (building) {
                 var bld = this.add(new Building());
-				bld.coords = building.coords;
-				bld.setSprite(building.sprite);
+                bld.coords = building.coords;
+                bld.setSprite(building.sprite);
             }, this);
         }
     };
@@ -435,12 +449,12 @@ var Game = (function () {
                 this.selections = [];
             }
             else if (this.selections.length > 0) {
-				if (hits.length == 1) {
-					hits[0].click(this.game, this.scene);
-				}
-				else {
-					console.log('don\'t know what to do targetting two objects at once');
-				}
+                if (hits.length == 1) {
+                    hits[0].click(this.game, this.scene);
+                }
+                else {
+                    console.log('don\'t know what to do targetting two objects at once');
+                }
             }
             else {
                 this.add(hits);
