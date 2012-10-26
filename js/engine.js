@@ -35,7 +35,7 @@ var Game = (function () {
      * @param {context} ctx - canvas rendering context
      * @param {object} timing - a set of timing data
      */
-    Obj.prototype.render = function (ctx, timing) {
+    Obj.prototype.render = function (ctx, scene, timing) {
         if (this.animating && this.animating.time > 0) {
             if (this.animating.velocity) {
                 this.coords[0] += this.animating.velocity[0] * timing.step;
@@ -183,8 +183,8 @@ var Game = (function () {
      * @param {context} ctx
      * @param {object} timing
      */
-    Button.prototype.render = function (ctx, timing) {
-        Obj.prototype.render.call(this, ctx, timing);
+    Button.prototype.render = function (ctx, scene, timing) {
+        Obj.prototype.render.call(this, ctx, scene, timing);
 
         ctx.font = "400 16px sans-serif";
         ctx.textAlign = "center";
@@ -219,14 +219,33 @@ var Game = (function () {
      * @param {context} ctx
      * @param {object} timing
      */
-    Building.prototype.render = function (ctx, timing) {
-        Obj.prototype.render.call(this, ctx, timing);
+    Building.prototype.render = function (ctx, scene, timing) {
+        Obj.prototype.render.call(this, ctx, scene, timing);
 
         ctx.font = "400 16px sans-serif";
         ctx.textAlign = "center";
 
         ctx.fillStyle = this.selected ? 'rgb(0, 255, 0)' : this.textColor;
         ctx.fillText(this.title, this.coords[0] + this.size[0] / 2, this.coords[1] + 0.7 * this.size[1]);
+
+        if (this.sending) {
+            if (this.sending.start === undefined) {
+                this.sending.timing = timing.last;
+            }
+
+            if (timing.last >= this.sending.timing) {
+                if (this.sending.units > 0) {
+                    var unit = scene.add(new Obj());
+                    unit.coords = this.coords.slice(0);
+                    unit.animate(this.sending.target.coords, 2000);
+                    this.sending.units -= 1;
+                    this.sending.timing += 800;
+                }
+                else {
+                    delete this.sending;
+                }
+            }
+        }
     };
 
     /**
@@ -261,7 +280,7 @@ var Game = (function () {
      */
     Building.prototype.click = function (game, scene) {
         console.log(scene.selection.selections, 'to', this);
-        scene.selection.selections[0].sendUnits(this, 100); //TODO this is awkward as hell
+        scene.selection.selections[0].sendUnits(this, 1); //TODO this is awkward as hell
     };
 
     /**
@@ -271,6 +290,11 @@ var Game = (function () {
      * @param {Number} units
      */
     Building.prototype.sendUnits = function (target, units) {
+        if (this.sending) {
+            console.log('Already sending, skipping');
+            return;
+        }
+
         this.sending = {
             'units': units,
             'target': target
@@ -357,7 +381,7 @@ var Game = (function () {
             return;
         }
 
-        this.objs.forEach(function (obj) { obj.render(ctx, timing); });
+        this.objs.forEach(function (obj) { obj.render(ctx, this, timing); }, this);
 
         if (this.actions.fade) { //TODO change to callback?
             this.actions.fade.opacity += (timing.step / this.actions.fade.totalTime)
@@ -453,7 +477,7 @@ var Game = (function () {
                     hits[0].click(this.game, this.scene);
                 }
                 else {
-                    console.log('don\'t know what to do targetting two objects at once');
+                    console.log('don\'t know what to do; targetting two objects at once');
                 }
             }
             else {
