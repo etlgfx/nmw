@@ -401,7 +401,9 @@ var Game = (function () {
 
         if (data.buildings) {
             data.buildings.forEach(function (building) {
-                this.add(new Building()).coords = building.coords;
+                var bld = this.add(new Building());
+				bld.coords = building.coords;
+				bld.setSprite(building.sprite);
             }, this);
         }
     };
