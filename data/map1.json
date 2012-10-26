@@ -1,4 +1,7 @@
 {
+    "scene":{
+        "selection": true
+    },
 	"buildings":[
 		{"coords": [50, 100], "sprite": "images/building-red.png"},
 		{"coords": [500, 100], "sprite": "images/building-green.png"},

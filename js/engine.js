@@ -260,7 +260,7 @@ var Game = (function () {
      * @param {Scene} scene
      */
     Building.prototype.click = function (game, scene) {
-        console.log("building click");
+        console.log(scene.selection.selections, 'to', this);
     };
 
     /**
@@ -435,7 +435,12 @@ var Game = (function () {
                 this.selections = [];
             }
             else if (this.selections.length > 0) {
-                this.selections.forEach(function (hit) { hit.click(this.game, this.scene); }, this);
+				if (hits.length == 1) {
+					hits[0].click(this.game, this.scene);
+				}
+				else {
+					console.log('don\'t know what to do targetting two objects at once');
+				}
             }
             else {
                 this.add(hits);
